@@ -1,6 +1,6 @@
 CC = gcc
 FLAGS = -Wall -Wextra -Werror
-SRC = pipex.c srcs/command_helper.c  srcs/pipe_errors.c includes/libft/libft.a
+SRC = pipex.c srcs/command_helper.c  srcs/pipex_errors.c srcs/pipex_utils.c  srcs/pipes_helper.c includes/libft/libft.a
 NAME = pipex
 RM = rm -f
 

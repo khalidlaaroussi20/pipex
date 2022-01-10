@@ -6,29 +6,11 @@
 /*   By: klaarous <klaarous@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 02:56:49 by klaarous          #+#    #+#             */
-/*   Updated: 2022/01/10 04:05:43 by klaarous         ###   ########.fr       */
+/*   Updated: 2022/01/10 05:45:25 by klaarous         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
-
-
-int	ft_open(char *file_name, int permission)
-{
-	int		fd;
-	char	*error;
-
-	fd = open (file_name, permission, 0777);
-	if (fd < 0)
-	{
-		error = strerror (errno);
-		ft_putstr_fd (error, 2);
-		ft_putstr_fd (": ", 2);
-		ft_putendl_fd (file_name, 2);
-		exit (1);
-	}
-	return (fd);
-}
 
 void execute_command(t_pipe pipe_struct,char **env,int input_fd,int output_fd)
 {
@@ -43,41 +25,31 @@ void execute_command(t_pipe pipe_struct,char **env,int input_fd,int output_fd)
 
 void excute_proccess(int ac,char **av,char **env,t_pipe *pipe_struct)
 {
-    int pipe_fd[2];
-    int ids[2];
+    int pipe_fd[ac - 4][2];
+    int ids[ac - 3];
     int i;
 
     i = 0;
-    pipe(pipe_fd);
+    open_pipes(pipe_fd,ac - 4);
     while (i < ac - 3)
     {
         ids[i] = fork();
         if (ids[i] == 0)
         {
+            close_pipes(pipe_fd,ac - 4,i);
             if (i == 0)
-            {
-                close(pipe_fd[0]);
-                execute_command(pipe_struct[i],env,pipe_struct[0].fd[0],pipe_fd[1]);
-            }
+                execute_command(pipe_struct[i],env,pipe_struct[0].fd[0],pipe_fd[i][1]);
             else if (i == ac - 4)
-            {
-                close(pipe_fd[1]);
-                execute_command(pipe_struct[i],env,pipe_fd[0],pipe_struct[0].fd[1]);
-            }
+                execute_command(pipe_struct[i],env,pipe_fd[i - 1][0],pipe_struct[0].fd[1]);
             else
-            {
-                
-            }
+                execute_command(pipe_struct[i],env,pipe_fd[i - 1][0],pipe_fd[i][1]);
         }
         i++;
     }
+    close_all_pipes(pipe_fd,ac - 4);
     i = 0;
     while (i < ac - 3)
-    {
-        close(pipe_fd[i]);
-        waitpid(ids[i],0,0);
-        i++;
-    }
+        waitpid(ids[i++],0,0);
     exit(0);
 }
 
@@ -105,7 +77,7 @@ void initalize_s_pipe(int ac,char **av,char **env,t_pipe *pipe_struct)
 int main(int ac,char **av,char **env)
 {
     t_pipe  pipe_struct[ac - 3];
-    if (ac == 5)
+    if (ac >= 5)
     {
         initalize_s_pipe(ac,av,env,pipe_struct);
         excute_proccess(ac,av,env,pipe_struct);

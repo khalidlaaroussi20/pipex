@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipe.h                                             :+:      :+:    :+:   */
+/*   pipex.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: klaarous <klaarous@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 02:57:53 by klaarous          #+#    #+#             */
-/*   Updated: 2022/01/10 02:48:58 by klaarous         ###   ########.fr       */
+/*   Updated: 2022/01/10 05:55:26 by klaarous         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ typedef struct s_pipe
 }               t_pipe;
 
 
+int	ft_open(char *file_name, int permission);
+
 //handle command
 
 int get_index_path_var(char **env);
@@ -42,7 +44,12 @@ char *get_path_cmd(char *command,char **paths_exec_cmd);
 //handle error
 
 void	command_not_found(char *command);
-int	ft_open(char *file_name, int permission);
 void	args_not_valid(void);
+
+//pipes helper
+
+void open_pipes(int (*pipes)[2],int len);
+void close_pipes(int (*pipes)[2],int len,int index_process);
+void close_all_pipes(int (*pipes)[2],int len);
 
 #endif
