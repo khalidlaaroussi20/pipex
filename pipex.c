@@ -6,81 +6,88 @@
 /*   By: klaarous <klaarous@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 02:56:49 by klaarous          #+#    #+#             */
-/*   Updated: 2022/01/10 05:45:25 by klaarous         ###   ########.fr       */
+/*   Updated: 2022/01/11 06:49:34 by klaarous         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void execute_command(t_pipe pipe_struct,char **env,int input_fd,int output_fd)
+void execute_command(t_pipex pipex_struct,char **env,int input_fd,int output_fd)
 {
     int error;
 
     dup2(input_fd,0);
     dup2(output_fd,1);
-    error = execve(pipe_struct.path_command,pipe_struct.command,env);
+    error = execve(pipex_struct.path_command,pipex_struct.command,env);
     if (error == -1)
-        command_not_found(pipe_struct.command[0]);
+        command_not_found(pipex_struct.command[0]);
 }
 
-void excute_proccess(int ac,char **av,char **env,t_pipe *pipe_struct)
+void excute_proccess(int ac,char **av,char **env,t_pipex *pipex_struct)
 {
-    int pipe_fd[ac - 4][2];
-    int ids[ac - 3];
+    int length = pipex_struct[0].length;
+    int pipe_fd[length - 1][2];
+    int p_ids[length];
     int i;
 
-    i = 0;
-    open_pipes(pipe_fd,ac - 4);
-    while (i < ac - 3)
-    {
-        ids[i] = fork();
-        if (ids[i] == 0)
-        {
-            close_pipes(pipe_fd,ac - 4,i);
-            if (i == 0)
-                execute_command(pipe_struct[i],env,pipe_struct[0].fd[0],pipe_fd[i][1]);
-            else if (i == ac - 4)
-                execute_command(pipe_struct[i],env,pipe_fd[i - 1][0],pipe_struct[0].fd[1]);
-            else
-                execute_command(pipe_struct[i],env,pipe_fd[i - 1][0],pipe_fd[i][1]);
-        }
-        i++;
-    }
-    close_all_pipes(pipe_fd,ac - 4);
-    i = 0;
-    while (i < ac - 3)
-        waitpid(ids[i++],0,0);
-    exit(0);
-}
-
-void initalize_s_pipe(int ac,char **av,char **env,t_pipe *pipe_struct)
-{
-    char **paths;
-    char **command;
-    int *fd;
-    int i;
-
-    paths = get_paths(env);
-    fd = malloc(2 * sizeof(int));
-    fd[0] = ft_open(av[1],O_RDONLY);
-    fd[1] = ft_open(av[ac - 1],O_WRONLY | O_CREAT | O_TRUNC);
     i = -1;
-    while (++i < ac - 3)
+    open_pipes(pipe_fd,length - 1);
+    while (++i < length)
     {
-        command = ft_split(av[i + 2],' ');
-        pipe_struct[i].command = command;
-        pipe_struct[i].path_command = get_path_cmd(command[0],paths);
-        pipe_struct[i].fd = fd;
+        p_ids[i] = fork();
+        if (p_ids[i] == 0)
+        {
+            close_pipes(pipe_fd,length - 1,i);
+            if (i == 0)
+                execute_command(pipex_struct[i],env,pipex_struct[0].fd[0],pipe_fd[i][1]);
+            else if (i == length - 1)
+                execute_command(pipex_struct[i],env,pipe_fd[i - 1][0],pipex_struct[0].fd[1]);
+            else
+                execute_command(pipex_struct[i],env,pipe_fd[i - 1][0],pipe_fd[i][1]);
+        }
     }
+    close_all_pipes(pipe_fd,length - 1);
+    wait_execution(p_ids,length);
+    free_s_pipex(pipex_struct,length);
+}
+
+void  ft_limiter(char *limiter)
+{
+    char    *line;
+    int     fd;
+
+    unlink ("/tmp/.temp");
+	fd = ft_open ("/tmp/.temp", O_RDWR | O_CREAT);
+    while (1)
+    {
+        write(0,">",1);
+        line = get_next_line(0);
+        if (!ft_strncmp(line,limiter,ft_strlen(line) - 1))
+            break ;
+        ft_putendl_fd(line,fd);
+        free(line);
+    }
+    close(fd);
 }
 
 int main(int ac,char **av,char **env)
 {
-    t_pipe  pipe_struct[ac - 3];
+    t_pipex pipex_struct[ac - 3];
+    int     is_here_doc;
+
+    is_here_doc = 0;
     if (ac >= 5)
     {
-        initalize_s_pipe(ac,av,env,pipe_struct);
-        excute_proccess(ac,av,env,pipe_struct);
+        if (!ft_strncmp(av[1],HERE_DOC,ft_strlen(av[1])))
+        {
+            if (ac == 5)
+                args_not_valid();
+            is_here_doc = 1;
+            ft_limiter(av[2]);       
+        }
+        initalize_s_pipe(ac,av,env,pipex_struct,is_here_doc);
+        //return 0;
+        excute_proccess(ac,av,env,pipex_struct);
     }
     args_not_valid();
 }

@@ -6,12 +6,14 @@
 /*   By: klaarous <klaarous@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 02:57:53 by klaarous          #+#    #+#             */
-/*   Updated: 2022/01/10 05:55:26 by klaarous         ###   ########.fr       */
+/*   Updated: 2022/01/11 05:46:44 by klaarous         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef PIPE_H
-#define  PIPE_H
+# define  PIPE_H
+
+# define HERE_DOC "here_doc"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,17 +25,26 @@
 #include <errno.h>
 
 #include "includes/libft/libft.h"
+#include "includes/get_next_line/get_next_line.h"
 
-typedef struct s_pipe
+
+typedef struct s_pipex
 {
-    int     *pipe_fd;
     char    **command;
     char    *path_command;
     int     *fd;
-}               t_pipe;
+    int     length;
+    int     is_doc;
+}               t_pipex;
 
+//pipex utils
 
 int	ft_open(char *file_name, int permission);
+void wait_execution(int *p_ids,int len);
+void delete_file(const char *filename);
+void initalize_s_pipe(int ac,char **av,char **env,t_pipex *pipe_struct,int is_here_doc);
+void free_list_str(char **str);
+void free_s_pipex(t_pipex *pipex_struct,int len);
 
 //handle command
 

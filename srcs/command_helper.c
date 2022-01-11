@@ -6,7 +6,7 @@
 /*   By: klaarous <klaarous@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/09 03:37:57 by klaarous          #+#    #+#             */
-/*   Updated: 2022/01/10 04:03:57 by klaarous         ###   ########.fr       */
+/*   Updated: 2022/01/11 02:46:40 by klaarous         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ char **get_paths(char **env)
     int i;
     int index_path_var;
     char **paths;
+    char *temp;
 
     paths = NULL;
     index_path_var = get_index_path_var(env);
@@ -42,7 +43,11 @@ char **get_paths(char **env)
         paths = ft_split(env[index_path_var] + 5,':');
         i = -1;
         while (paths[++i])
+        {
+            temp = paths[i];
             paths[i] = ft_strjoin(paths[i],"/");
+            free(temp);
+        }
     }
     return (paths);
 }
@@ -61,5 +66,5 @@ char *get_path_cmd(char *command,char **paths_exec_cmd)
             return (path_cmd);
         free(path_cmd);
     }
-    return (command);
+    return (ft_substr(command,0,ft_strlen(command)));
 }
